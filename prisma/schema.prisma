@@ -14,7 +14,6 @@ datasource db {
   provider = "postgresql"
 }
 
-
 model Contact {
   id             Int             @id @default(autoincrement())
   phoneNumber    String?
