@@ -21,8 +21,7 @@ COPY prisma.config.ts ./
 RUN npm install --omit=dev
 
 COPY --from=builder /app/dist ./dist
-
-# ← Copy generated INTO dist folder so the path resolves correctly
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/src/generated ./dist/generated
 
 EXPOSE 3000

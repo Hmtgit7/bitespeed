@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitespeed Identity Reconciliation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #0f0f0f;
+        color: #e8e8e8;
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+
+      .container {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+
+      header {
+        margin-bottom: 40px;
+      }
+
+      header h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 6px;
+      }
+
+      header p {
+        font-size: 14px;
+        color: #666;
+      }
+
+      header a {
+        color: #888;
+        text-decoration: none;
+      }
+
+      header a:hover {
+        color: #ccc;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        padding: 3px 10px;
+        font-size: 12px;
+        color: #4ade80;
+        margin-top: 10px;
+      }
+
+      .card {
+        background: #161616;
+        border: 1px solid #222;
+        border-radius: 10px;
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+
+      .card h2 {
+        font-size: 14px;
+        font-weight: 500;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 18px;
+      }
+
+      .field {
+        margin-bottom: 14px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        color: #777;
+        margin-bottom: 6px;
+      }
+
+      input {
+        width: 100%;
+        background: #0f0f0f;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #e8e8e8;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      input:focus {
+        border-color: #444;
+      }
+
+      input::placeholder {
+        color: #444;
+      }
+
+      .presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .preset-btn {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12px;
+        color: #888;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .preset-btn:hover {
+        border-color: #444;
+        color: #ccc;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .btn-primary {
+        flex: 1;
+        background: #fff;
+        color: #000;
+        border: none;
+        border-radius: 6px;
+        padding: 11px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+
+      .btn-primary:hover {
+        opacity: 0.85;
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: #666;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 11px 18px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .btn-secondary:hover {
+        border-color: #444;
+        color: #aaa;
+      }
+
+      .result {
+        display: none;
+      }
+
+      .result.visible {
+        display: block;
+      }
+
+      .result-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4ade80;
+        flex-shrink: 0;
+      }
+
+      .status-dot.error {
+        background: #f87171;
+      }
+
+      .result-header span {
+        font-size: 13px;
+        color: #777;
+      }
+
+      pre {
+        background: #0a0a0a;
+        border: 1px solid #1e1e1e;
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-x: auto;
+        color: #d4d4d4;
+        font-family: "SF Mono", "Fira Code", monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .json-key {
+        color: #9cdcfe;
+      }
+      .json-string {
+        color: #ce9178;
+      }
+      .json-number {
+        color: #b5cea8;
+      }
+      .json-bool {
+        color: #569cd6;
+      }
+      .json-null {
+        color: #569cd6;
+      }
+
+      .history {
+        margin-top: 8px;
+      }
+
+      .history-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #1a1a1a;
+        font-size: 13px;
+      }
+
+      .history-item:last-child {
+        border-bottom: none;
+      }
+
+      .history-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+        margin-top: 5px;
+        flex-shrink: 0;
+      }
+
+      .history-dot.error {
+        background: #f87171;
+      }
+
+      .history-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .history-req {
+        color: #aaa;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .history-meta {
+        color: #555;
+        font-size: 12px;
+      }
+
+      .history-view {
+        background: none;
+        border: none;
+        color: #555;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      .history-view:hover {
+        color: #aaa;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 30px 0;
+        color: #444;
+        font-size: 13px;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #333;
+        border-top-color: #888;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .divider {
+        height: 1px;
+        background: #1e1e1e;
+        margin: 20px 0;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 8px;
+      }
+
+      .info-row span:last-child {
+        color: #888;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Bitespeed Identity Reconciliation</h1>
+        <p>
+          <a href="https://github.com/Hmtgit7/bitespeed" target="_blank"
+            >github</a
+          >
+          &nbsp;·&nbsp;
+          <a href="/identify" target="_blank">POST /identify</a>
+        </p>
+        <div class="badge" id="status-badge">● checking...</div>
+      </header>
+
+      <div class="card">
+        <h2>Test Request</h2>
+
+        <p style="font-size: 13px; color: #555; margin-bottom: 16px">
+          Try a preset or enter your own values. At least one field is required.
+        </p>
+
+        <div class="presets">
+          <button
+            class="preset-btn"
+            onclick="setPreset('lorraine@hillvalley.edu', '123456')"
+          >
+            New contact
+          </button>
+          <button
+            class="preset-btn"
+            onclick="setPreset('mcfly@hillvalley.edu', '123456')"
+          >
+            Link by phone
+          </button>
+          <button
+            class="preset-btn"
+            onclick="setPreset('lorraine@hillvalley.edu', '')"
+          >
+            Email only
+          </button>
+          <button class="preset-btn" onclick="setPreset('', '123456')">
+            Phone only
+          </button>
+          <button
+            class="preset-btn"
+            onclick="setPreset('george@hillvalley.edu', '919191')"
+          >
+            Cluster A
+          </button>
+          <button
+            class="preset-btn"
+            onclick="setPreset('biffsucks@hillvalley.edu', '717171')"
+          >
+            Cluster B
+          </button>
+          <button
+            class="preset-btn"
+            onclick="setPreset('george@hillvalley.edu', '717171')"
+          >
+            Merge clusters
+          </button>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="lorraine@hillvalley.edu"
+          />
+        </div>
+
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="text" id="phone" placeholder="123456" />
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="submit-btn" onclick="identify()">
+            Send Request
+          </button>
+          <button class="btn-secondary" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card result" id="result-card">
+        <h2>Response</h2>
+        <div class="result-header">
+          <div class="status-dot" id="result-dot"></div>
+          <span id="result-meta"></span>
+        </div>
+        <pre id="result-json"></pre>
+      </div>
+
+      <div class="card">
+        <h2>Request History</h2>
+        <div class="history" id="history">
+          <div class="empty-state">No requests yet</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Endpoint Info</h2>
+        <div class="info-row">
+          <span>Method</span>
+          <span>POST</span>
+        </div>
+        <div class="info-row">
+          <span>URL</span>
+          <span id="endpoint-url">/identify</span>
+        </div>
+        <div class="info-row">
+          <span>Content-Type</span>
+          <span>application/json</span>
+        </div>
+        <div class="divider"></div>
+        <pre
+          style="font-size: 12px; color: #555"
+        >curl -X POST <span id="curl-url"></span>/identify \
+  -H "Content-Type: application/json" \
+  -d '{"email": "mcfly@hillvalley.edu", "phoneNumber": "123456"}'</pre>
+      </div>
+    </div>
+
+    <script>
+      const history = [];
+
+      // Set base URL dynamically
+      const BASE_URL = window.location.origin;
+      document.getElementById("endpoint-url").textContent =
+        BASE_URL + "/identify";
+      document.getElementById("curl-url").textContent = BASE_URL;
+
+      // Check service health
+      async function checkHealth() {
+        const badge = document.getElementById("status-badge");
+        try {
+          const res = await fetch("/health");
+          if (res.ok) {
+            badge.textContent = "● live";
+            badge.style.color = "#4ade80";
+          } else {
+            badge.textContent = "● degraded";
+            badge.style.color = "#fbbf24";
+          }
+        } catch {
+          badge.textContent = "● offline";
+          badge.style.color = "#f87171";
+        }
+      }
+
+      checkHealth();
+
+      function setPreset(email, phone) {
+        document.getElementById("email").value = email;
+        document.getElementById("phone").value = phone;
+      }
+
+      function clearForm() {
+        document.getElementById("email").value = "";
+        document.getElementById("phone").value = "";
+        document.getElementById("result-card").classList.remove("visible");
+      }
+
+      function syntaxHighlight(json) {
+        return json.replace(
+          /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          (match) => {
+            let cls = "json-number";
+            if (/^"/.test(match)) {
+              cls = /:$/.test(match) ? "json-key" : "json-string";
+            } else if (/true|false/.test(match)) {
+              cls = "json-bool";
+            } else if (/null/.test(match)) {
+              cls = "json-null";
+            }
+            return `<span class="${cls}">${match}</span>`;
+          }
+        );
+      }
+
+      function addToHistory(email, phone, success, responseData, duration) {
+        const req = [email && `email: ${email}`, phone && `phone: ${phone}`]
+          .filter(Boolean)
+          .join(", ");
+
+        history.unshift({
+          req,
+          success,
+          responseData,
+          duration,
+          time: new Date(),
+        });
+        renderHistory();
+      }
+
+      function renderHistory() {
+        const container = document.getElementById("history");
+
+        if (history.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state">No requests yet</div>';
+          return;
+        }
+
+        container.innerHTML = history
+          .slice(0, 8)
+          .map(
+            (item, i) => `
+          <div class="history-item">
+            <div class="history-dot ${item.success ? "" : "error"}"></div>
+            <div class="history-info">
+              <div class="history-req">${item.req}</div>
+              <div class="history-meta">${item.success ? "200 OK" : "Error"} · ${item.duration}ms · ${item.time.toLocaleTimeString()}</div>
+            </div>
+            <button class="history-view" onclick="showHistoryItem(${i})">view</button>
+          </div>
+        `
+          )
+          .join("");
+      }
+
+      function showHistoryItem(index) {
+        const item = history[index];
+        const card = document.getElementById("result-card");
+        const dot = document.getElementById("result-dot");
+        const meta = document.getElementById("result-meta");
+        const json = document.getElementById("result-json");
+
+        card.classList.add("visible");
+        dot.className = `status-dot ${item.success ? "" : "error"}`;
+        meta.textContent = `${item.success ? "200 OK" : "Error"} · ${item.duration}ms · ${item.req}`;
+        json.innerHTML = syntaxHighlight(
+          JSON.stringify(item.responseData, null, 2)
+        );
+
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      async function identify() {
+        const email = document.getElementById("email").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        if (!email && !phone) {
+          alert("Please enter at least an email or phone number.");
+          return;
+        }
+
+        const btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span>Sending...';
+
+        const body = {};
+        if (email) body.email = email;
+        if (phone) body.phoneNumber = phone;
+
+        const start = Date.now();
+
+        try {
+          const res = await fetch("/identify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+
+          const duration = Date.now() - start;
+          const data = await res.json();
+          const success = res.ok;
+
+          const card = document.getElementById("result-card");
+          const dot = document.getElementById("result-dot");
+          const meta = document.getElementById("result-meta");
+          const json = document.getElementById("result-json");
+
+          card.classList.add("visible");
+          dot.className = `status-dot ${success ? "" : "error"}`;
+          meta.textContent = `${res.status} ${res.statusText} · ${duration}ms`;
+          json.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+
+          addToHistory(email, phone, success, data, duration);
+          card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (err) {
+          const duration = Date.now() - start;
+          const data = { error: err.message };
+
+          document.getElementById("result-card").classList.add("visible");
+          document.getElementById("result-dot").className = "status-dot error";
+          document.getElementById("result-meta").textContent =
+            `Network error · ${duration}ms`;
+          document.getElementById("result-json").innerHTML = syntaxHighlight(
+            JSON.stringify(data, null, 2)
+          );
+
+          addToHistory(email, phone, false, data, duration);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = "Send Request";
+        }
+      }
+
+      // Allow Enter key to submit
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) identify();
+      });
+    </script>
+  </body>
+</html>
