@@ -1,1 +1,1 @@
-echo "npx commitlint --edit \$1" > .husky/commit-msg
+npx commitlint --edit $1
